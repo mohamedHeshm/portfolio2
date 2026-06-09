@@ -4,8 +4,8 @@
  * Replace SUPABASE_URL and SUPABASE_ANON_KEY with your project values.
  */
 
-const SUPABASE_URL      = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL      = 'https://qesumryokyqpjagngnmn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_XKS-RysT-PpIrUl4jH4wgA_szsq486m';
 
 // Lazy-load the Supabase CDN SDK so it doesn't block the main thread
 let _client = null;
