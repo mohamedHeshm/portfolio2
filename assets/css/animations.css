@@ -1,0 +1,200 @@
+/* ============================================================
+   ANIMATIONS.CSS — Keyframes & Animation Utilities
+   ============================================================ */
+
+/* ── Float ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%       { transform: translateY(-18px) rotate(1.5deg); }
+  66%       { transform: translateY(-10px) rotate(-1deg); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-24px); }
+}
+
+/* ── Glow Pulse ── */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: var(--shadow-glow-cyan); }
+  50%       { box-shadow: 0 0 80px rgba(56, 189, 248, 0.6), 0 0 160px rgba(56, 189, 248, 0.3); }
+}
+
+@keyframes glowPulseViolet {
+  0%, 100% { box-shadow: var(--shadow-glow-violet); }
+  50%       { box-shadow: 0 0 80px rgba(167, 139, 250, 0.6), 0 0 160px rgba(167, 139, 250, 0.3); }
+}
+
+/* ── Aurora ── */
+@keyframes aurora {
+  0%   { transform: rotate(0deg) scale(1); opacity: 0.6; }
+  33%  { transform: rotate(120deg) scale(1.2); opacity: 0.8; }
+  66%  { transform: rotate(240deg) scale(0.9); opacity: 0.5; }
+  100% { transform: rotate(360deg) scale(1); opacity: 0.6; }
+}
+
+/* ── Shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Typewriter cursor ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Particle drift ── */
+@keyframes drift {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.5); opacity: 0; }
+}
+
+/* ── Blob morphing ── */
+@keyframes blob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25%       { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+  50%       { border-radius: 50% 50% 30% 70% / 50% 70% 30% 50%; }
+  75%       { border-radius: 70% 30% 70% 30% / 40% 60% 40% 60%; }
+}
+
+/* ── Rotate slow ── */
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes rotateReverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+/* ── Fade up (reveal) ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Ripple ── */
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+/* ── Medal spin ── */
+@keyframes medalIdle {
+  0%, 100% { transform: rotateY(0deg) rotateX(4deg) translateY(0); }
+  25%       { transform: rotateY(8deg) rotateX(2deg) translateY(-12px); }
+  75%       { transform: rotateY(-6deg) rotateX(6deg) translateY(-6px); }
+}
+
+/* ── Scan line ── */
+@keyframes scanLine {
+  0%   { top: -10%; }
+  100% { top: 110%; }
+}
+
+/* ── Count up (handled in JS, CSS provides entry) ── */
+@keyframes counterReveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Progress bar fill ── */
+@keyframes fillBar {
+  from { width: 0; }
+  to   { width: var(--target-width, 80%); }
+}
+
+/* ── Testimonial slide ── */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Nav underline ── */
+@keyframes navUnderline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ── Cursor ring ── */
+@keyframes cursorRingPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  50%       { transform: translate(-50%, -50%) scale(1.4); opacity: 0.4; }
+}
+
+/* ── Utility Classes ── */
+.animate-float       { animation: float 6s ease-in-out infinite; }
+.animate-float-slow  { animation: floatSlow 8s ease-in-out infinite; }
+.animate-glow        { animation: glowPulse 3s ease-in-out infinite; }
+.animate-blob        { animation: blob 8s ease-in-out infinite; }
+.animate-rotate-slow { animation: rotateSlow 20s linear infinite; }
+.animate-shimmer     {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ── Reveal (JS-driven) ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-out);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-spring);
+}
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-out);
+}
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-out);
+}
+.reveal-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}

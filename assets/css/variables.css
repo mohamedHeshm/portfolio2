@@ -1,0 +1,119 @@
+/* ============================================================
+   VARIABLES.CSS — Design Tokens & CSS Custom Properties
+   ============================================================ */
+
+:root {
+  /* ── Core Palette ── */
+  --clr-bg:          #020408;
+  --clr-bg-2:        #060c14;
+  --clr-surface:     #0a111e;
+  --clr-surface-2:   #0f1929;
+  --clr-border:      rgba(99, 179, 255, 0.08);
+  --clr-border-glow: rgba(99, 179, 255, 0.25);
+
+  /* ── Brand Accents ── */
+  --clr-cyan:        #38bdf8;
+  --clr-cyan-dim:    rgba(56, 189, 248, 0.15);
+  --clr-cyan-glow:   rgba(56, 189, 248, 0.4);
+  --clr-violet:      #a78bfa;
+  --clr-violet-dim:  rgba(167, 139, 250, 0.15);
+  --clr-violet-glow: rgba(167, 139, 250, 0.4);
+  --clr-emerald:     #34d399;
+  --clr-emerald-dim: rgba(52, 211, 153, 0.15);
+  --clr-rose:        #fb7185;
+  --clr-rose-dim:    rgba(251, 113, 133, 0.15);
+  --clr-amber:       #fbbf24;
+
+  /* ── Text ── */
+  --clr-text-primary:   #f0f6ff;
+  --clr-text-secondary: #94a3b8;
+  --clr-text-muted:     #475569;
+  --clr-text-accent:    var(--clr-cyan);
+
+  /* ── Medal / Hero ── */
+  --medal-gold-1: #fde68a;
+  --medal-gold-2: #f59e0b;
+  --medal-gold-3: #92400e;
+  --medal-shine:  rgba(255, 255, 255, 0.6);
+
+  /* ── Glassmorphism ── */
+  --glass-bg:     rgba(10, 17, 30, 0.6);
+  --glass-border: rgba(99, 179, 255, 0.12);
+  --glass-blur:   20px;
+
+  /* ── Typography ── */
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  --fs-hero:  clamp(3rem, 8vw, 7rem);
+  --fs-h1:    clamp(2rem, 5vw, 4rem);
+  --fs-h2:    clamp(1.5rem, 3vw, 2.5rem);
+  --fs-h3:    clamp(1.1rem, 2vw, 1.5rem);
+  --fs-body:  1rem;
+  --fs-small: 0.875rem;
+  --fs-xs:    0.75rem;
+
+  --fw-light:   300;
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+  --fw-black:   800;
+
+  --lh-tight:  1.1;
+  --lh-normal: 1.5;
+  --lh-loose:  1.8;
+
+  /* ── Spacing ── */
+  --sp-1:  0.25rem;
+  --sp-2:  0.5rem;
+  --sp-3:  0.75rem;
+  --sp-4:  1rem;
+  --sp-6:  1.5rem;
+  --sp-8:  2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+  --sp-20: 5rem;
+  --sp-24: 6rem;
+  --sp-32: 8rem;
+
+  /* ── Border Radius ── */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md:   0 8px 32px rgba(0,0,0,0.5);
+  --shadow-lg:   0 24px 64px rgba(0,0,0,0.6);
+  --shadow-glow-cyan:   0 0 40px rgba(56, 189, 248, 0.3), 0 0 80px rgba(56, 189, 248, 0.15);
+  --shadow-glow-violet: 0 0 40px rgba(167, 139, 250, 0.3), 0 0 80px rgba(167, 139, 250, 0.15);
+
+  /* ── Transitions ── */
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.87, 0, 0.13, 1);
+  --ease-elastic: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+  --dur-fast:   150ms;
+  --dur-normal: 300ms;
+  --dur-slow:   600ms;
+  --dur-xslow:  1000ms;
+
+  /* ── Layout ── */
+  --container-max: 1280px;
+  --section-pad:   clamp(4rem, 10vw, 8rem);
+  --nav-h:         72px;
+
+  /* ── Z-index ── */
+  --z-base:    1;
+  --z-content: 10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-cursor:  999;
+  --z-nav:     500;
+}

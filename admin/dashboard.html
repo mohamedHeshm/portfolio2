@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Portfolio Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    :root{
+      --bg:#020408;--surface:#0a111e;--surface-2:#0f1929;
+      --border:rgba(99,179,255,0.1);--border-glow:rgba(99,179,255,0.28);
+      --cyan:#38bdf8;--violet:#a78bfa;--emerald:#34d399;--rose:#fb7185;--amber:#fbbf24;
+      --text:#f0f6ff;--text-2:#94a3b8;--muted:#475569;
+      --font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+      --sidebar-w:260px;--topbar-h:64px;--radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;overflow-x:hidden}
+
+    /* ════ SIDEBAR ════ */
+    .sidebar{
+      width:var(--sidebar-w);min-height:100vh;background:var(--surface);
+      border-right:1px solid var(--border);display:flex;flex-direction:column;
+      padding:1.5rem 1rem;position:fixed;top:0;left:0;bottom:0;
+      overflow-y:auto;z-index:200;transition:transform .3s ease;
+    }
+    .sidebar-logo{
+      font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;
+      background:linear-gradient(135deg,var(--cyan),var(--violet));
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      padding-bottom:1.25rem;margin-bottom:1rem;border-bottom:1px solid var(--border);
+    }
+    .sidebar-logo small{display:block;font-size:.72rem;color:var(--muted);font-family:var(--mono);font-weight:400;-webkit-text-fill-color:var(--muted);margin-top:.2rem}
+    .nav-label{font-size:.62rem;font-family:var(--mono);color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin:1.25rem 0 .4rem .5rem}
+    .nav-btn{
+      display:flex;align-items:center;gap:.65rem;width:100%;padding:.6rem .8rem;
+      border-radius:10px;border:none;background:transparent;color:var(--text-2);
+      font-family:var(--font);font-size:.88rem;cursor:pointer;transition:all .18s;text-align:left;
+      position:relative;
+    }
+    .nav-btn:hover{background:rgba(56,189,248,0.07);color:var(--text)}
+    .nav-btn.active{background:rgba(56,189,248,0.13);color:var(--cyan)}
+    .nav-btn .ni{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+    .nav-btn .nc{
+      margin-left:auto;font-size:.68rem;font-family:var(--mono);
+      background:rgba(56,189,248,0.15);color:var(--cyan);padding:1px 7px;border-radius:99px;min-width:24px;text-align:center;
+    }
+    .sidebar-footer{margin-top:auto;padding-top:1.25rem;border-top:1px solid var(--border)}
+    .sidebar-user{display:flex;align-items:center;gap:.65rem;margin-bottom:.9rem;overflow:hidden}
+    .sidebar-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+    .sidebar-uname{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-uemail{font-size:.7rem;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .btn-logout{width:100%;padding:.55rem;border-radius:9px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.2);color:var(--rose);font-family:var(--font);font-size:.84rem;cursor:pointer;transition:background .2s}
+    .btn-logout:hover{background:rgba(251,113,133,0.22)}
+
+    /* ════ MAIN ════ */
+    .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;min-width:0}
+    .topbar{
+      height:var(--topbar-h);padding:0 1.75rem;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:1rem;
+      background:rgba(2,4,8,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      position:sticky;top:0;z-index:50;
+    }
+    .topbar-left{display:flex;align-items:center;gap:.75rem}
+    .sidebar-toggle{display:none;flex-direction:column;gap:4px;width:28px;cursor:pointer;background:none;border:none;padding:4px}
+    .sidebar-toggle span{display:block;height:2px;background:var(--text-2);border-radius:2px;transition:all .2s}
+    .topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem}
+    .topbar-right{display:flex;gap:.65rem;align-items:center;flex-shrink:0}
+    .badge-live{display:inline-flex;align-items:center;gap:.4rem;padding:4px 10px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:99px;font-size:.7rem;font-family:var(--mono);color:var(--emerald)}
+    .badge-live-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 6px var(--emerald);animation:blip 2s ease-in-out infinite}
+    @keyframes blip{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* ════ CONTENT ════ */
+    .content{padding:1.75rem;flex:1}
+    .panel{display:none;animation:fadeIn .25s ease}
+    .panel.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* Overview stats */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1rem;margin-bottom:2rem}
+    .stat-box{padding:1.2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);transition:all .2s}
+    .stat-box:hover{border-color:var(--border-glow);transform:translateY(-2px)}
+    .stat-box-icon{font-size:1.4rem;margin-bottom:.5rem}
+    .stat-box-num{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:800;line-height:1;background:linear-gradient(135deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .stat-box-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.25rem}
+
+    /* Section bar */
+    .section-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+    .section-bar h2{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700}
+
+    /* Table */
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse}
+    th{padding:.7rem 1rem;text-align:left;font-size:.7rem;font-family:var(--mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap}
+    td{padding:.75rem 1rem;font-size:.87rem;border-bottom:1px solid rgba(255,255,255,0.035);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tbody tr:hover td{background:rgba(56,189,248,0.035)}
+    .td-act{display:flex;gap:.4rem;align-items:center}
+    .empty-row td{text-align:center;padding:3rem 1rem;color:var(--muted)}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem 1rem;border-radius:9px;font-family:var(--font);font-size:.82rem;font-weight:500;cursor:pointer;border:none;transition:all .18s;text-decoration:none;white-space:nowrap}
+    .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#020408}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(56,189,248,0.35)}
+    .btn-primary:active{transform:none}
+    .btn-sm{padding:.32rem .7rem;font-size:.77rem}
+    .btn-ghost{background:rgba(255,255,255,0.05);color:var(--text-2);border:1px solid var(--border)}
+    .btn-ghost:hover{background:rgba(255,255,255,0.1);color:var(--text)}
+    .btn-danger{background:rgba(251,113,133,0.1);color:var(--rose);border:1px solid rgba(251,113,133,0.2)}
+    .btn-danger:hover{background:rgba(251,113,133,0.22)}
+
+    /* Form elements */
+    .form-row{margin-bottom:.9rem}
+    .form-row label{display:block;font-size:.72rem;font-family:var(--mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.38rem}
+    .form-row input,.form-row textarea,.form-row select{
+      width:100%;padding:.62rem .9rem;background:var(--surface-2);border:1px solid var(--border);
+      border-radius:9px;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;
+      transition:border-color .2s,box-shadow .2s;
+    }
+    .form-row input:focus,.form-row textarea:focus,.form-row select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(56,189,248,0.12)}
+    .form-row textarea{resize:vertical;min-height:88px;line-height:1.6}
+    .form-row select option{background:var(--surface-2)}
+    .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .form-actions{display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+    .form-section{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+    .form-section-title{font-size:.78rem;font-family:var(--mono);color:var(--cyan);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.9rem}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .22s}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal{width:min(580px,100%);max-height:90vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border-glow);border-radius:20px;padding:1.75rem;transform:scale(.92) translateY(24px);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+    .modal-overlay.open .modal{transform:scale(1) translateY(0)}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+    .modal-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700}
+    .modal-close{background:none;border:none;color:var(--muted);font-size:1.25rem;cursor:pointer;padding:4px 6px;border-radius:7px;line-height:1;transition:all .15s}
+    .modal-close:hover{background:rgba(255,255,255,0.08);color:var(--text)}
+
+    /* Toast */
+    .toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.7rem 1.15rem;border-radius:11px;font-size:.84rem;z-index:999;transform:translateY(70px);opacity:0;transition:all .32s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-width:320px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.success{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:var(--emerald)}
+    .toast.error{background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.35);color:var(--rose)}
+    .toast.info{background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:var(--cyan)}
+
+    /* Misc */
+    .tag{display:inline-flex;padding:2px 9px;border-radius:99px;font-size:.7rem;font-family:var(--mono);background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);color:var(--cyan);margin:1px}
+    .img-preview{width:100%;height:130px;border-radius:9px;object-fit:cover;border:1px solid var(--border);margin-top:.5rem;display:none}
+    .img-preview.show{display:block}
+    .progress-mini{height:4px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;flex:1}
+    .progress-mini-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:99px}
+    .help-text{font-size:.75rem;color:var(--muted);margin-top:.3rem;line-height:1.5}
+    .divider{height:1px;background:var(--border);margin:1.25rem 0}
+    .info-box{padding:1rem 1.25rem;background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.18);border-radius:var(--radius);font-size:.85rem;color:var(--text-2);line-height:1.7;margin-bottom:1.5rem}
+    .info-box strong{color:var(--cyan)}
+
+    /* Sidebar overlay for mobile */
+    .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:199}
+
+    /* ════ RESPONSIVE ════ */
+    @media(max-width:860px){
+      .sidebar{transform:translateX(-100%)}
+      .sidebar.mobile-open{transform:translateX(0)}
+      .sidebar-backdrop.show{display:block}
+      .main{margin-left:0}
+      .sidebar-toggle{display:flex}
+      .topbar{padding:0 1rem}
+      .content{padding:1.25rem}
+      .form-2col{grid-template-columns:1fr}
+      .stats-row{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:480px){
+      .stats-row{grid-template-columns:1fr}
+      .topbar-right .badge-live{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast" class="toast" role="alert" aria-live="polite"></div>
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
+<!-- ════ SIDEBAR ════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    AD. Admin
+    <small>Portfolio Dashboard</small>
+  </div>
+
+  <div class="nav-label">Content</div>
+  <button class="nav-btn active" onclick="openPanel('overview',this)"><span class="ni">📊</span>Overview</button>
+  <button class="nav-btn" onclick="openPanel('hero',this)"><span class="ni">🏠</span>Hero</button>
+  <button class="nav-btn" onclick="openPanel('about',this)"><span class="ni">👤</span>About</button>
+  <button class="nav-btn" onclick="openPanel('projects',this)"><span class="ni">💡</span>Projects<span class="nc" id="cnt-projects">—</span></button>
+  <button class="nav-btn" onclick="openPanel('skills',this)"><span class="ni">⚡</span>Skills<span class="nc" id="cnt-skills">—</span></button>
+
+  <div class="nav-label">Social & Media</div>
+  <button class="nav-btn" onclick="openPanel('testimonials',this)"><span class="ni">💬</span>Testimonials<span class="nc" id="cnt-testimonials">—</span></button>
+  <button class="nav-btn" onclick="openPanel('certs',this)"><span class="ni">🏆</span>Certificates</button>
+  <button class="nav-btn" onclick="openPanel('services',this)"><span class="ni">🛠️</span>Services</button>
+  <button class="nav-btn" onclick="openPanel('links',this)"><span class="ni">🔗</span>Social Links</button>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-av">👤</div>
+      <div style="overflow:hidden">
+        <div class="sidebar-uname" id="user-name">Loading…</div>
+        <div class="sidebar-uemail" id="user-email">—</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">↩ Sign Out</button>
+  </div>
+</aside>
+
+<!-- ════ MAIN ════ -->
+<main class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-title" id="panel-title">Overview</div>
+    </div>
+    <div class="topbar-right">
+      <div class="badge-live"><span class="badge-live-dot"></span> Live</div>
+      <a href="../index.html" target="_blank" class="btn btn-ghost btn-sm">View Site ↗</a>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content">
+
+    <!-- ── OVERVIEW ── -->
+    <div id="panel-overview" class="panel active">
+      <div class="info-box">
+        Welcome back! Manage all your portfolio content from here. Changes save to <strong>Supabase</strong> and reflect on your site in real-time.
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-box-icon">💡</div><div class="stat-box-num" id="ov-projects">—</div><div class="stat-box-label">Projects</div></div>
+        <div class="stat-box"><div class="stat-box-icon">⚡</div><div class="stat-box-num" id="ov-skills">—</div><div class="stat-box-label">Skills</div></div>
+        <div class="stat-box"><div class="stat-box-icon">💬</div><div class="stat-box-num" id="ov-testimonials">—</div><div class="stat-box-label">Testimonials</div></div>
+        <div class="stat-box"><div class="stat-box-icon">🏆</div><div class="stat-box-num" id="ov-certs">—</div><div class="stat-box-label">Certificates</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+        <button class="btn btn-ghost" style="justify-content:flex-start;gap:.6rem;padding:.85rem 1rem" onclick="openPanel('projects',document.querySelector('[onclick*=projects]'))">💡 Manage Projects →</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;gap:.6rem;padding:.85rem 1rem" onclick="openPanel('skills',document.querySelector('[onclick*=skills]'))">⚡ Manage Skills →</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;gap:.6rem;padding:.85rem 1rem" onclick="openPanel('testimonials',document.querySelector('[onclick*=testimonials]'))">💬 Manage Reviews →</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;gap:.6rem;padding:.85rem 1rem" onclick="openPanel('links',document.querySelector('[onclick*=links]'))">🔗 Social Links →</button>
+      </div>
+    </div>
+
+    <!-- ── HERO ── -->
+    <div id="panel-hero" class="panel">
+      <div class="section-bar"><h2>Hero Section</h2><button class="btn btn-primary" onclick="saveHero()">💾 Save</button></div>
+      <div class="form-section">
+        <div class="form-section-title">Identity</div>
+        <div class="form-2col">
+          <div class="form-row"><label>Full Name</label><input id="h-name" placeholder="Alex Doe"></div>
+          <div class="form-row"><label>Status Badge</label><input id="h-badge" placeholder="Available for Work"></div>
+        </div>
+        <div class="form-row"><label>Subtitle / Tagline</label><input id="h-subtitle" placeholder="Crafting digital experiences…"></div>
+        <div class="form-row">
+          <label>Roles (typewriter) — comma-separated</label>
+          <input id="h-roles" placeholder="Full Stack Developer, Frontend Engineer, UI Craftsman">
+          <p class="help-text">These rotate in the typewriter animation on the hero section.</p>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Stats</div>
+        <div class="form-2col">
+          <div class="form-row"><label>Years Experience</label><input type="number" id="h-years" placeholder="5" min="0"></div>
+          <div class="form-row"><label>Projects Done</label><input type="number" id="h-projects-count" placeholder="40" min="0"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Profile Photo</div>
+        <div class="form-row">
+          <label>Avatar URL</label>
+          <input id="h-avatar" placeholder="https://…/photo.jpg" oninput="previewImg(this,'h-av-preview')">
+          <img id="h-av-preview" class="img-preview" alt="Avatar preview">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ABOUT ── -->
+    <div id="panel-about" class="panel">
+      <div class="section-bar"><h2>About Section</h2><button class="btn btn-primary" onclick="saveAbout()">💾 Save</button></div>
+      <div class="form-section">
+        <div class="form-section-title">Biography</div>
+        <div class="form-row"><label>Bio Text</label><textarea id="a-bio" rows="5" placeholder="Tell your story…"></textarea></div>
+        <div class="form-row">
+          <label>About Photo URL</label>
+          <input id="a-img" placeholder="https://…/about.jpg" oninput="previewImg(this,'a-img-preview')">
+          <img id="a-img-preview" class="img-preview" alt="About photo preview">
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Counter Stats</div>
+        <div class="form-2col">
+          <div class="form-row"><label>Years Experience</label><input type="number" id="a-years" placeholder="5" min="0"></div>
+          <div class="form-row"><label>Projects Done</label><input type="number" id="a-projects" placeholder="40" min="0"></div>
+        </div>
+        <div class="form-2col">
+          <div class="form-row"><label>Happy Clients</label><input type="number" id="a-clients" placeholder="30" min="0"></div>
+          <div class="form-row"><label>Awards Won</label><input type="number" id="a-awards" placeholder="8" min="0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROJECTS ── -->
+    <div id="panel-projects" class="panel">
+      <div class="section-bar"><h2>Projects</h2><button class="btn btn-primary" onclick="openModal('project')">+ Add Project</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Category</th><th>Featured</th><th>Links</th><th>Actions</th></tr></thead>
+          <tbody id="projects-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SKILLS ── -->
+    <div id="panel-skills" class="panel">
+      <div class="section-bar"><h2>Skills</h2><button class="btn btn-primary" onclick="openModal('skill')">+ Add Skill</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Icon</th><th>Name</th><th>Category</th><th>Level</th><th>Actions</th></tr></thead>
+          <tbody id="skills-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TESTIMONIALS ── -->
+    <div id="panel-testimonials" class="panel">
+      <div class="section-bar"><h2>Testimonials</h2><button class="btn btn-primary" onclick="openModal('testimonial')">+ Add</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Rating</th><th>Actions</th></tr></thead>
+          <tbody id="testimonials-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CERTIFICATES ── -->
+    <div id="panel-certs" class="panel">
+      <div class="section-bar"><h2>Certificates</h2><button class="btn btn-primary" onclick="openModal('cert')">+ Add</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Year</th><th>Certificate</th><th>Issuer</th><th>Actions</th></tr></thead>
+          <tbody id="certs-tbody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SERVICES ── -->
+    <div id="panel-services" class="panel">
+      <div class="section-bar"><h2>Services</h2><button class="btn btn-primary" onclick="openModal('service')">+ Add</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Icon</th><th>Title</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody id="services-tbody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SOCIAL LINKS ── -->
+    <div id="panel-links" class="panel">
+      <div class="section-bar"><h2>Social Links</h2><button class="btn btn-primary" onclick="saveLinks()">💾 Save</button></div>
+      <div class="form-section" style="max-width:520px">
+        <div class="form-section-title">Contact Channels</div>
+        <div class="form-row"><label>Gmail Address</label><input id="l-gmail" type="email" placeholder="hello@example.com"></div>
+        <div class="form-row"><label>WhatsApp (with country code, numbers only)</label><input id="l-whatsapp" placeholder="201012345678"><p class="help-text">Example: 201012345678 for Egypt +20 number</p></div>
+        <div class="form-row"><label>LinkedIn Profile URL</label><input id="l-linkedin" placeholder="https://linkedin.com/in/username"></div>
+        <div class="form-row"><label>GitHub Profile URL</label><input id="l-github" placeholder="https://github.com/username"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ════════════ MODALS ════════════ -->
+
+<!-- Project Modal -->
+<div id="modal-project" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mp-title">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="mp-title">Add Project</div>
+      <button class="modal-close" onclick="closeModal('project')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-row"><label>Title *</label><input id="p-title" placeholder="My Awesome Project"></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Category</label>
+        <select id="p-cat"><option>Full Stack</option><option>Frontend</option><option>Backend</option><option>Mobile</option><option>DevOps</option><option>Other</option></select>
+      </div>
+      <div class="form-row"><label>Featured?</label>
+        <select id="p-featured"><option value="false">No</option><option value="true">⭐ Yes</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label>Description *</label><textarea id="p-desc" placeholder="What does this project do?"></textarea></div>
+    <div class="form-row"><label>Technologies (comma-separated)</label><input id="p-tech" placeholder="React, Node.js, PostgreSQL"></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Live Demo URL</label><input id="p-demo" type="url" placeholder="https://…"></div>
+      <div class="form-row"><label>GitHub URL</label><input id="p-github" type="url" placeholder="https://github.com/…"></div>
+    </div>
+    <div class="form-row"><label>Screenshot URL</label><input id="p-img" type="url" placeholder="https://…/screenshot.png" oninput="previewImg(this,'p-img-preview')"><img id="p-img-preview" class="img-preview" alt="Project preview"></div>
+    <input type="hidden" id="p-id">
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('project')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProject()">💾 Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- Skill Modal -->
+<div id="modal-skill" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="ms-title">Add Skill</div>
+      <button class="modal-close" onclick="closeModal('skill')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Skill Name *</label><input id="s-name" placeholder="JavaScript"></div>
+      <div class="form-row"><label>Icon (emoji)</label><input id="s-icon" placeholder="⚡" maxlength="4"></div>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Category</label>
+        <select id="s-cat"><option>Frontend</option><option>Backend</option><option>Database</option><option>DevOps</option><option>Mobile</option><option>Design</option><option>Other</option></select>
+      </div>
+      <div class="form-row"><label>Level (0–100)</label><input type="number" id="s-level" placeholder="85" min="0" max="100"></div>
+    </div>
+    <div class="form-row"><label>Order Index (for sorting)</label><input type="number" id="s-order" placeholder="1" min="0"></div>
+    <input type="hidden" id="s-id">
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('skill')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSkill()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Testimonial Modal -->
+<div id="modal-testimonial" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Add Testimonial</div>
+      <button class="modal-close" onclick="closeModal('testimonial')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-row"><label>Client Name *</label><input id="t-name" placeholder="Jane Smith"></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Role / Title</label><input id="t-role" placeholder="CTO"></div>
+      <div class="form-row"><label>Company</label><input id="t-company" placeholder="TechCorp"></div>
+    </div>
+    <div class="form-row"><label>Quote *</label><textarea id="t-quote" placeholder="Amazing work, delivered beyond expectations…"></textarea></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Rating</label>
+        <select id="t-rating"><option value="5">⭐⭐⭐⭐⭐ (5)</option><option value="4">⭐⭐⭐⭐ (4)</option><option value="3">⭐⭐⭐ (3)</option></select>
+      </div>
+      <div class="form-row"><label>Avatar URL</label><input id="t-avatar" type="url" placeholder="https://…/photo.jpg"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('testimonial')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTestimonial()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate Modal -->
+<div id="modal-cert" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="mc-title">Add Certificate</div>
+      <button class="modal-close" onclick="closeModal('cert')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Year *</label><input type="number" id="c-year" placeholder="2024"></div>
+      <div class="form-row"><label>Issuer *</label><input id="c-issuer" placeholder="AWS / Google / Meta…"></div>
+    </div>
+    <div class="form-row"><label>Certificate Name *</label><input id="c-name" placeholder="AWS Solutions Architect Professional"></div>
+    <div class="form-row"><label>Description</label><textarea id="c-desc" rows="3" placeholder="Brief description of what this covers…"></textarea></div>
+    <input type="hidden" id="c-id">
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('cert')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCert()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Service Modal -->
+<div id="modal-service" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="msv-title">Add Service</div>
+      <button class="modal-close" onclick="closeModal('service')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Icon (emoji)</label><input id="sv-icon" placeholder="🌐" maxlength="4"></div>
+      <div class="form-row"><label>Title *</label><input id="sv-title" placeholder="Web Development"></div>
+    </div>
+    <div class="form-row"><label>Description *</label><textarea id="sv-desc" rows="4" placeholder="What this service includes…"></textarea></div>
+    <div class="form-row"><label>Order Index</label><input type="number" id="sv-order" placeholder="1" min="0"></div>
+    <input type="hidden" id="sv-id">
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('service')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveService()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   CONFIG — replace with your Supabase credentials
+══════════════════════════════════════════════════ */
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY';
+
+let _sb = null;
+const getSB = () => _sb || (_sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
+
+/* ══ Auth guard ══ */
+window.addEventListener('load', async () => {
+  try {
+    const { data: { session } } = await getSB().auth.getSession();
+    if (!session) return redirect('index.html');
+    document.getElementById('user-name').textContent  = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    document.getElementById('user-email').textContent = session.user.email;
+    loadOverview();
+    loadHeroData();
+    loadAboutData();
+    loadLinksData();
+  } catch(e) {
+    console.error(e);
+    redirect('index.html');
+  }
+});
+
+async function doLogout() {
+  await getSB().auth.signOut();
+  redirect('index.html');
+}
+function redirect(path) { window.location.href = path; }
+
+/* ══ Mobile sidebar ══ */
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.toggle('show');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.remove('show');
+}
+
+/* ══ Panel navigation ══ */
+const panelLoaders = { projects: loadProjects, skills: loadSkills, testimonials: loadTestimonials, certs: loadCerts, services: loadServices };
+
+function openPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+  // Clean panel title from emoji
+  const label = btn?.textContent.replace(/[^\p{L}\s]/gu,'').trim() || id;
+  document.getElementById('panel-title').textContent = label;
+  panelLoaders[id]?.();
+  closeMobileSidebar();
+}
+
+/* ══ Modals ══ */
+const MODAL_FIELDS = {
+  project:     ['p-id','p-title','p-desc','p-tech','p-demo','p-github','p-img'],
+  skill:       ['s-id','s-name','s-icon','s-level','s-order'],
+  testimonial: ['t-name','t-role','t-company','t-quote','t-avatar'],
+  cert:        ['c-id','c-year','c-name','c-issuer','c-desc'],
+  service:     ['sv-id','sv-icon','sv-title','sv-desc','sv-order']
+};
+
+function openModal(type) {
+  (MODAL_FIELDS[type]||[]).forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  // Reset image previews
+  document.querySelectorAll('#modal-'+type+' .img-preview').forEach(img => { img.classList.remove('show'); img.src=''; });
+  // Reset edit titles
+  const titles = {project:'Add Project',skill:'Add Skill',cert:'Add Certificate',service:'Add Service'};
+  const titleEl = document.getElementById('m'+type[0]+'-title') || document.getElementById('mp-title');
+  if(titles[type] && titleEl) titleEl.textContent = titles[type];
+  document.getElementById('modal-'+type).classList.add('open');
+  // Focus first input
+  setTimeout(() => document.querySelector('#modal-'+type+' input:not([type=hidden])')?.focus(), 100);
+}
+function closeModal(type) {
+  document.getElementById('modal-'+type).classList.remove('open');
+}
+
+/* ══ Toast ══ */
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  clearTimeout(toastTimer);
+  el.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ') + msg;
+  el.className = `toast ${type} show`;
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+/* ══ Image preview ══ */
+function previewImg(input, previewId) {
+  const img = document.getElementById(previewId);
+  if (!img) return;
+  if (input.value.trim()) { img.src = input.value.trim(); img.classList.add('show'); }
+  else { img.classList.remove('show'); }
+}
+
+/* ══ DB helpers ══ */
+async function dbAll(table, orderCol='created_at', asc=false) {
+  const { data, error } = await getSB().from(table).select('*').order(orderCol, { ascending: asc });
+  if (error) throw error;
+  return data || [];
+}
+async function dbCount(table) {
+  const { count, error } = await getSB().from(table).select('*', { count:'exact', head:true });
+  if (error) return 0;
+  return count ?? 0;
+}
+async function dbInsert(table, row) {
+  const { data, error } = await getSB().from(table).insert(row).select().single();
+  if (error) throw error;
+  return data;
+}
+async function dbUpdate(table, id, row) {
+  const { data, error } = await getSB().from(table).update(row).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+async function dbDelete(table, id) {
+  const { error } = await getSB().from(table).delete().eq('id', id);
+  if (error) throw error;
+}
+async function dbUpsert(table, row) {
+  const { data, error } = await getSB().from(table).upsert(row).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/* ══ Overview ══ */
+async function loadOverview() {
+  const [p,s,t,c] = await Promise.all([
+    dbCount('projects'), dbCount('skills'), dbCount('testimonials'), dbCount('certificates')
+  ]);
+  document.getElementById('ov-projects').textContent     = p;
+  document.getElementById('ov-skills').textContent       = s;
+  document.getElementById('ov-testimonials').textContent = t;
+  document.getElementById('ov-certs').textContent        = c;
+  document.getElementById('cnt-projects').textContent    = p;
+  document.getElementById('cnt-skills').textContent      = s;
+  document.getElementById('cnt-testimonials').textContent= t;
+}
+
+/* ══ Hero ══ */
+async function loadHeroData() {
+  try {
+    const { data, error } = await getSB().from('hero').select('*').maybeSingle();
+    if (error || !data) return;
+    document.getElementById('h-name').value           = data.name          || '';
+    document.getElementById('h-badge').value          = data.badge         || '';
+    document.getElementById('h-subtitle').value       = data.subtitle      || '';
+    document.getElementById('h-roles').value          = (data.roles||[]).join(', ');
+    document.getElementById('h-years').value          = data.years_exp     || '';
+    document.getElementById('h-projects-count').value = data.projects_done || '';
+    document.getElementById('h-avatar').value         = data.avatar_url    || '';
+    if (data.avatar_url) previewImg(document.getElementById('h-avatar'), 'h-av-preview');
+  } catch(e) { console.warn('loadHeroData:', e.message); }
+}
+async function saveHero() {
+  try {
+    const roles = document.getElementById('h-roles').value.split(',').map(s=>s.trim()).filter(Boolean);
+    await dbUpsert('hero', {
+      name:          document.getElementById('h-name').value.trim()     || null,
+      badge:         document.getElementById('h-badge').value.trim()    || null,
+      subtitle:      document.getElementById('h-subtitle').value.trim() || null,
+      roles,
+      years_exp:     parseInt(document.getElementById('h-years').value)          || null,
+      projects_done: parseInt(document.getElementById('h-projects-count').value) || null,
+      avatar_url:    document.getElementById('h-avatar').value.trim()   || null,
+      updated_at:    new Date().toISOString()
+    });
+    toast('Hero section saved successfully!');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ About ══ */
+async function loadAboutData() {
+  try {
+    const { data, error } = await getSB().from('about').select('*').maybeSingle();
+    if (error || !data) return;
+    document.getElementById('a-bio').value     = data.bio            || '';
+    document.getElementById('a-img').value     = data.image_url      || '';
+    document.getElementById('a-years').value   = data.years_exp      || '';
+    document.getElementById('a-projects').value= data.projects_done  || '';
+    document.getElementById('a-clients').value = data.clients        || '';
+    document.getElementById('a-awards').value  = data.awards         || '';
+    if (data.image_url) previewImg(document.getElementById('a-img'), 'a-img-preview');
+  } catch(e) { console.warn('loadAboutData:', e.message); }
+}
+async function saveAbout() {
+  try {
+    await dbUpsert('about', {
+      bio:           document.getElementById('a-bio').value.trim()  || null,
+      image_url:     document.getElementById('a-img').value.trim()  || null,
+      years_exp:     parseInt(document.getElementById('a-years').value)    || null,
+      projects_done: parseInt(document.getElementById('a-projects').value) || null,
+      clients:       parseInt(document.getElementById('a-clients').value)  || null,
+      awards:        parseInt(document.getElementById('a-awards').value)   || null,
+      updated_at:    new Date().toISOString()
+    });
+    toast('About section saved!');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Social Links ══ */
+async function loadLinksData() {
+  try {
+    const { data, error } = await getSB().from('social_links').select('*').maybeSingle();
+    if (error || !data) return;
+    document.getElementById('l-gmail').value    = data.gmail    || '';
+    document.getElementById('l-whatsapp').value = data.whatsapp || '';
+    document.getElementById('l-linkedin').value = data.linkedin || '';
+    document.getElementById('l-github').value   = data.github   || '';
+  } catch(e) { console.warn('loadLinksData:', e.message); }
+}
+async function saveLinks() {
+  const gmail    = document.getElementById('l-gmail').value.trim();
+  const whatsapp = document.getElementById('l-whatsapp').value.trim().replace(/\D/g,'');
+  const linkedin = document.getElementById('l-linkedin').value.trim();
+  const github   = document.getElementById('l-github').value.trim();
+  if (!gmail && !linkedin && !github) return toast('Fill at least one link','error');
+  try {
+    await dbUpsert('social_links', { gmail, whatsapp, linkedin, github, updated_at: new Date().toISOString() });
+    toast('Social links saved!');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Projects ══ */
+async function loadProjects() {
+  const tbody = document.getElementById('projects-tbody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Loading…</td></tr>';
+  try {
+    const rows = await dbAll('projects');
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5" style="text-align:center;padding:3rem">No projects yet — add your first one! 💡</td></tr>'; return; }
+    tbody.innerHTML = rows.map(p => `
+      <tr>
+        <td><strong>${esc(p.title)}</strong></td>
+        <td><span class="tag">${esc(p.category||'—')}</span></td>
+        <td style="text-align:center">${p.featured ? '⭐' : '<span style="color:var(--muted)">—</span>'}</td>
+        <td>
+          ${p.demo_url   ? `<a href="${esc(p.demo_url)}"   target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Demo ↗</a>` : ''}
+          ${p.github_url ? `<a href="${esc(p.github_url)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Code ↗</a>` : ''}
+        </td>
+        <td><div class="td-act">
+          <button class="btn btn-ghost btn-sm" onclick='editProject(${safeJson(p)})' aria-label="Edit">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')" aria-label="Delete">🗑️</button>
+        </div></td>
+      </tr>
+    `).join('');
+  } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="5" style="color:var(--rose)">Error: ${esc(e.message)}</td></tr>`; }
+}
+async function saveProject() {
+  const id      = document.getElementById('p-id').value;
+  const title   = document.getElementById('p-title').value.trim();
+  const desc    = document.getElementById('p-desc').value.trim();
+  if (!title)   return toast('Title is required','error');
+  if (!desc)    return toast('Description is required','error');
+  const tech    = document.getElementById('p-tech').value.split(',').map(s=>s.trim()).filter(Boolean);
+  try {
+    const payload = {
+      title, description: desc, technologies: tech,
+      category:  document.getElementById('p-cat').value,
+      featured:  document.getElementById('p-featured').value === 'true',
+      demo_url:  document.getElementById('p-demo').value.trim()   || null,
+      github_url:document.getElementById('p-github').value.trim() || null,
+      image_url: document.getElementById('p-img').value.trim()    || null,
+      updated_at:new Date().toISOString()
+    };
+    id ? await dbUpdate('projects', id, payload) : await dbInsert('projects', payload);
+    toast(id ? 'Project updated!' : 'Project created!');
+    closeModal('project'); loadProjects(); loadOverview();
+  } catch(e) { toast(e.message,'error'); }
+}
+function editProject(p) {
+  document.getElementById('p-id').value        = p.id;
+  document.getElementById('p-title').value     = p.title        || '';
+  document.getElementById('p-cat').value       = p.category     || 'Full Stack';
+  document.getElementById('p-featured').value  = p.featured ? 'true' : 'false';
+  document.getElementById('p-desc').value      = p.description  || '';
+  document.getElementById('p-tech').value      = (p.technologies||[]).join(', ');
+  document.getElementById('p-demo').value      = p.demo_url     || '';
+  document.getElementById('p-github').value    = p.github_url   || '';
+  document.getElementById('p-img').value       = p.image_url    || '';
+  document.getElementById('mp-title').textContent = 'Edit Project';
+  if (p.image_url) previewImg(document.getElementById('p-img'), 'p-img-preview');
+  document.getElementById('modal-project').classList.add('open');
+}
+async function deleteProject(id) {
+  if (!confirm('Delete this project? This cannot be undone.')) return;
+  try { await dbDelete('projects', id); toast('Project deleted'); loadProjects(); loadOverview(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Skills ══ */
+async function loadSkills() {
+  const tbody = document.getElementById('skills-tbody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Loading…</td></tr>';
+  try {
+    const rows = await dbAll('skills', 'order_index', true);
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5" style="text-align:center;padding:3rem">No skills yet — add your stack! ⚡</td></tr>'; return; }
+    tbody.innerHTML = rows.map(s => `
+      <tr>
+        <td style="font-size:1.4rem">${s.icon||'⚙️'}</td>
+        <td><strong>${esc(s.name)}</strong></td>
+        <td><span class="tag">${esc(s.category||'—')}</span></td>
+        <td style="min-width:140px">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div class="progress-mini"><div class="progress-mini-fill" style="width:${s.level||0}%"></div></div>
+            <span style="font-size:.72rem;font-family:var(--mono);color:var(--muted);flex-shrink:0">${s.level||0}%</span>
+          </div>
+        </td>
+        <td><div class="td-act">
+          <button class="btn btn-ghost btn-sm" onclick='editSkill(${safeJson(s)})'>✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSkill('${s.id}')">🗑️</button>
+        </div></td>
+      </tr>
+    `).join('');
+  } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="5" style="color:var(--rose)">Error: ${esc(e.message)}</td></tr>`; }
+}
+async function saveSkill() {
+  const name = document.getElementById('s-name').value.trim();
+  if (!name) return toast('Skill name is required','error');
+  const id = document.getElementById('s-id').value;
+  try {
+    const payload = {
+      name,
+      icon:        document.getElementById('s-icon').value.trim()  || '⚙️',
+      category:    document.getElementById('s-cat').value,
+      level:       Math.min(100, Math.max(0, parseInt(document.getElementById('s-level').value)||80)),
+      order_index: parseInt(document.getElementById('s-order').value) || 0
+    };
+    id ? await dbUpdate('skills', id, payload) : await dbInsert('skills', payload);
+    toast(id ? 'Skill updated!' : 'Skill added!');
+    closeModal('skill'); loadSkills(); loadOverview();
+  } catch(e) { toast(e.message,'error'); }
+}
+function editSkill(s) {
+  document.getElementById('s-id').value    = s.id;
+  document.getElementById('s-name').value  = s.name     || '';
+  document.getElementById('s-icon').value  = s.icon     || '';
+  document.getElementById('s-cat').value   = s.category || 'Frontend';
+  document.getElementById('s-level').value = s.level    || 80;
+  document.getElementById('s-order').value = s.order_index || 0;
+  document.getElementById('ms-title').textContent = 'Edit Skill';
+  document.getElementById('modal-skill').classList.add('open');
+}
+async function deleteSkill(id) {
+  if (!confirm('Delete this skill?')) return;
+  try { await dbDelete('skills', id); toast('Skill deleted'); loadSkills(); loadOverview(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Testimonials ══ */
+async function loadTestimonials() {
+  const tbody = document.getElementById('testimonials-tbody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Loading…</td></tr>';
+  try {
+    const rows = await dbAll('testimonials');
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5" style="text-align:center;padding:3rem">No testimonials yet 💬</td></tr>'; return; }
+    tbody.innerHTML = rows.map(t => `
+      <tr>
+        <td><strong>${esc(t.name)}</strong></td>
+        <td>${esc(t.role||'—')}</td>
+        <td>${esc(t.company||'—')}</td>
+        <td>${'⭐'.repeat(Math.min(t.rating||5,5))}</td>
+        <td><div class="td-act">
+          <button class="btn btn-danger btn-sm" onclick="deleteTestimonial('${t.id}')">🗑️</button>
+        </div></td>
+      </tr>
+    `).join('');
+  } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="5" style="color:var(--rose)">Error: ${esc(e.message)}</td></tr>`; }
+}
+async function saveTestimonial() {
+  const name  = document.getElementById('t-name').value.trim();
+  const quote = document.getElementById('t-quote').value.trim();
+  if (!name)  return toast('Client name is required','error');
+  if (!quote) return toast('Quote is required','error');
+  try {
+    await dbInsert('testimonials', {
+      name, quote,
+      role:       document.getElementById('t-role').value.trim()    || null,
+      company:    document.getElementById('t-company').value.trim() || null,
+      rating:     parseInt(document.getElementById('t-rating').value) || 5,
+      avatar_url: document.getElementById('t-avatar').value.trim()  || null,
+      created_at: new Date().toISOString()
+    });
+    toast('Testimonial added!'); closeModal('testimonial'); loadTestimonials(); loadOverview();
+  } catch(e) { toast(e.message,'error'); }
+}
+async function deleteTestimonial(id) {
+  if (!confirm('Delete this testimonial?')) return;
+  try { await dbDelete('testimonials', id); toast('Deleted'); loadTestimonials(); loadOverview(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Certificates ══ */
+async function loadCerts() {
+  const tbody = document.getElementById('certs-tbody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Loading…</td></tr>';
+  try {
+    const rows = await dbAll('certificates', 'year');
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="4" style="text-align:center;padding:3rem">No certificates yet 🏆</td></tr>'; return; }
+    tbody.innerHTML = rows.map(c => `
+      <tr>
+        <td><span class="tag">${esc(String(c.year))}</span></td>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td>${esc(c.issuer||'—')}</td>
+        <td><div class="td-act">
+          <button class="btn btn-ghost btn-sm" onclick='editCert(${safeJson(c)})'>✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCert('${c.id}')">🗑️</button>
+        </div></td>
+      </tr>
+    `).join('');
+  } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="4" style="color:var(--rose)">Error: ${esc(e.message)}</td></tr>`; }
+}
+async function saveCert() {
+  const year = document.getElementById('c-year').value;
+  const name = document.getElementById('c-name').value.trim();
+  const issuer = document.getElementById('c-issuer').value.trim();
+  if (!year || !name || !issuer) return toast('Year, name and issuer are required','error');
+  const id = document.getElementById('c-id').value;
+  try {
+    const payload = { year: parseInt(year), name, issuer, description: document.getElementById('c-desc').value.trim() || null };
+    id ? await dbUpdate('certificates', id, payload) : await dbInsert('certificates', payload);
+    toast(id ? 'Certificate updated!' : 'Certificate added!'); closeModal('cert'); loadCerts();
+  } catch(e) { toast(e.message,'error'); }
+}
+function editCert(c) {
+  document.getElementById('c-id').value     = c.id;
+  document.getElementById('c-year').value   = c.year   || '';
+  document.getElementById('c-name').value   = c.name   || '';
+  document.getElementById('c-issuer').value = c.issuer || '';
+  document.getElementById('c-desc').value   = c.description || '';
+  document.getElementById('mc-title').textContent = 'Edit Certificate';
+  document.getElementById('modal-cert').classList.add('open');
+}
+async function deleteCert(id) {
+  if (!confirm('Delete this certificate?')) return;
+  try { await dbDelete('certificates', id); toast('Deleted'); loadCerts(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Services ══ */
+async function loadServices() {
+  const tbody = document.getElementById('services-tbody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Loading…</td></tr>';
+  try {
+    const rows = await dbAll('services', 'order_index', true);
+    if (!rows.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="4" style="text-align:center;padding:3rem">No services yet 🛠️</td></tr>'; return; }
+    tbody.innerHTML = rows.map(s => `
+      <tr>
+        <td style="font-size:1.4rem">${s.icon||'⚙️'}</td>
+        <td><strong>${esc(s.title)}</strong></td>
+        <td style="color:var(--text-2);max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.description||'—')}</td>
+        <td><div class="td-act">
+          <button class="btn btn-ghost btn-sm" onclick='editService(${safeJson(s)})'>✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteService('${s.id}')">🗑️</button>
+        </div></td>
+      </tr>
+    `).join('');
+  } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="4" style="color:var(--rose)">Error: ${esc(e.message)}</td></tr>`; }
+}
+async function saveService() {
+  const title = document.getElementById('sv-title').value.trim();
+  const desc  = document.getElementById('sv-desc').value.trim();
+  if (!title || !desc) return toast('Title and description are required','error');
+  const id = document.getElementById('sv-id').value;
+  try {
+    const payload = { title, description: desc, icon: document.getElementById('sv-icon').value.trim() || '⚙️', order_index: parseInt(document.getElementById('sv-order').value)||0 };
+    id ? await dbUpdate('services', id, payload) : await dbInsert('services', payload);
+    toast(id ? 'Service updated!' : 'Service added!'); closeModal('service'); loadServices();
+  } catch(e) { toast(e.message,'error'); }
+}
+function editService(s) {
+  document.getElementById('sv-id').value    = s.id;
+  document.getElementById('sv-icon').value  = s.icon  || '';
+  document.getElementById('sv-title').value = s.title || '';
+  document.getElementById('sv-desc').value  = s.description || '';
+  document.getElementById('sv-order').value = s.order_index || 0;
+  document.getElementById('msv-title').textContent = 'Edit Service';
+  document.getElementById('modal-service').classList.add('open');
+}
+async function deleteService(id) {
+  if (!confirm('Delete this service?')) return;
+  try { await dbDelete('services', id); toast('Deleted'); loadServices(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+/* ══ Helpers ══ */
+// Escape HTML to prevent XSS
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+// Safely serialize object for inline onclick without breaking HTML attribute
+function safeJson(obj) {
+  return "'" + JSON.stringify(obj).replace(/'/g,"\\'") + "'";
+}
+// Make editXxx() accept string argument from onclick
+['Project','Skill','Cert','Service'].forEach(type => {
+  const fn = window['edit'+type];
+  window['edit'+type] = (arg) => {
+    const obj = typeof arg === 'string' ? JSON.parse(arg) : arg;
+    fn(obj);
+  };
+});
+
+/* ══ Keyboard shortcuts ══ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+</script>
+</body>
+</html>

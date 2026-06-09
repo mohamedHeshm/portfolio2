@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — Portfolio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    /* ── Variables ── */
+    :root {
+      --bg:        #020408;
+      --surface:   #0a111e;
+      --surface-2: #0f1929;
+      --border:    rgba(99,179,255,0.1);
+      --cyan:      #38bdf8;
+      --violet:    #a78bfa;
+      --text:      #f0f6ff;
+      --muted:     #64748b;
+      --error:     #fb7185;
+      --success:   #34d399;
+      --font:      'DM Sans', sans-serif;
+      --mono:      'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+
+    /* Aurora blobs */
+    .aurora { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.25;
+      animation: aurora 20s ease-in-out infinite;
+    }
+    .blob-1 { width:600px;height:600px;top:-200px;left:-150px;background:radial-gradient(circle,#0ea5e9,transparent 70%); }
+    .blob-2 { width:500px;height:500px;bottom:-100px;right:-100px;background:radial-gradient(circle,#7c3aed,transparent 70%);animation-delay:-8s;animation-direction:reverse; }
+
+    @keyframes aurora {
+      0%,100%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.2)}
+    }
+
+    /* Card */
+    .login-card {
+      position: relative;
+      width: min(420px, 90vw);
+      background: rgba(10,17,30,0.8);
+      border: 1px solid rgba(99,179,255,0.15);
+      border-radius: 24px;
+      padding: 2.5rem;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-logo-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px; height: 60px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 40px rgba(56,189,248,0.4);
+    }
+    .login-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg,var(--cyan),var(--violet));
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .login-subtitle { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+
+    /* Form */
+    .form-group { margin-bottom: 1.2rem; }
+    label {
+      display: block;
+      font-size: .8rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: .5rem;
+    }
+    input {
+      width: 100%;
+      padding: .75rem 1rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: .95rem;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: .85rem;
+      background: linear-gradient(135deg,var(--cyan),var(--violet));
+      border: none;
+      border-radius: 10px;
+      color: #020408;
+      font-family: var(--font);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: all .25s cubic-bezier(.34,1.56,.64,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(56,189,248,0.4); }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(2,4,8,0.3);
+      border-top-color: #020408;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert */
+    .alert {
+      padding: .75rem 1rem;
+      border-radius: 10px;
+      font-size: .85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .alert.error   { background: rgba(251,113,133,0.12); border: 1px solid rgba(251,113,133,0.3); color: var(--error); }
+    .alert.success { background: rgba(52,211,153,0.12);  border: 1px solid rgba(52,211,153,0.3);  color: var(--success); }
+    .alert.show    { display: block; animation: fadeUp .3s ease; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    /* Back link */
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: .82rem;
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+</div>
+
+<div class="login-card">
+  <div class="login-logo">
+    <div class="login-logo-mark">🔐</div>
+    <div class="login-title">Admin Login</div>
+    <div class="login-subtitle">Sign in to manage your portfolio</div>
+  </div>
+
+  <div id="alert" class="alert"></div>
+
+  <div class="form-group">
+    <label for="email">Email Address</label>
+    <input type="email" id="email" placeholder="admin@example.com" autocomplete="email" />
+  </div>
+
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+  </div>
+
+  <button class="btn-login" id="login-btn" onclick="doLogin()">
+    Sign In →
+  </button>
+
+  <a href="../index.html" class="back-link">← Back to Portfolio</a>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY';
+
+let sb = null;
+function getClient() {
+  if (!sb) sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return sb;
+}
+
+function showAlert(msg, type = 'error') {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.className = `alert ${type} show`;
+}
+
+async function doLogin() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('login-btn');
+
+  if (!email || !password) return showAlert('Please fill in all fields.');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Signing in…';
+
+  try {
+    const client = getClient();
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    showAlert('Login successful! Redirecting…', 'success');
+    setTimeout(() => window.location.href = 'dashboard.html', 800);
+  } catch (err) {
+    showAlert(err.message || 'Invalid credentials. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = 'Sign In →';
+  }
+}
+
+// Allow Enter key to submit
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// Check if already logged in
+window.addEventListener('load', async () => {
+  try {
+    const { data } = await getClient().auth.getSession();
+    if (data.session) window.location.href = 'dashboard.html';
+  } catch {}
+});
+</script>
+</body>
+</html>
